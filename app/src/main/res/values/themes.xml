@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Test" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/gris</item> <!-- couleur en haut et bouton -->
+        <item name="colorPrimaryVariant">@color/violet</item>
+        <item name="colorOnPrimary">@color/violet</item>
+        <item name="colorSecondary">@color/bleu</item><!-- couleur de progressbar -->
+        <item name="colorSecondaryVariant">@color/bleu</item>
+        <item name="colorOnSecondary">@color/bleu</item>
+
+    </style>
+
+</resources>
