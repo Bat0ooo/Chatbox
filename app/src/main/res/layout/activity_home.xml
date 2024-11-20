@@ -11,16 +11,23 @@
         android:id="@+id/Chatbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="176dp"
+        android:layout_marginTop="16dp"
         android:text="@string/chatbox"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.042" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/Discussion"
+        android:layout_width="379dp"
+        android:layout_height="540dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="72dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/LoginCreate"
+        android:id="@+id/NewMessage"
         android:layout_width="301dp"
         android:layout_height="46dp"
         android:layout_marginStart="32dp"
@@ -44,7 +51,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
-        android:id="@+id/imageView2"
+        android:id="@+id/imageAvion"
         android:layout_width="27dp"
         android:layout_height="25dp"
         android:layout_marginStart="355dp"

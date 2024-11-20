@@ -1,8 +1,10 @@
 package com.example.test;
 
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -19,5 +21,23 @@ public class HomeActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        Button connectButton = findViewById(R.id.Envoi);
+        EditText newMessage = findViewById(R.id.NewMessage);
+        TextView discussion = findViewById(R.id.Discussion);
+
+        connectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String message = newMessage.getText().toString().trim();
+
+                String currentDiscussion = discussion.getText().toString();
+
+                String updatedDiscussion = currentDiscussion + "\n" + message;
+                discussion.setText(updatedDiscussion);
+                newMessage.setText("");
+            }
+        });
     }
+
 }
