@@ -15,11 +15,11 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Button connectButton = findViewById(R.id.Envoi);
+        Button envoyer = findViewById(R.id.Envoi);
         EditText newMessage = findViewById(R.id.NewMessage);
         LinearLayout discussionContainer = findViewById(R.id.discussionContainer);
 
-        connectButton.setOnClickListener(new View.OnClickListener() {
+        envoyer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String message = newMessage.getText().toString().trim();
@@ -27,8 +27,10 @@ public class HomeActivity extends AppCompatActivity {
                     messageView.setText(message);
 
                     messageView.setBackgroundResource(R.drawable.message_background);
+                    messageView.setPadding(30, 20, 20, 30);
 
-                    discussionContainer.addView(messageView);
+
+                discussionContainer.addView(messageView);
 
                     newMessage.setText("");
                 }
