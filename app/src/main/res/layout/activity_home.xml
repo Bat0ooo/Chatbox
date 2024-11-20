@@ -8,14 +8,48 @@
     tools:context=".HomeActivity">
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/Chatbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Home page"
+        android:text="@string/chatbox"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5" />
+        app:layout_constraintVertical_bias="0.042" />
+
+    <EditText
+        android:id="@+id/LoginCreate"
+        android:layout_width="301dp"
+        android:layout_height="46dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="48dp"
+        android:background="@drawable/round_button"
+        android:ems="10"
+        android:hint="     Entrez un message ..."
+        android:inputType="text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/Envoi"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="344dp"
+        android:background="@drawable/round_button"
+        android:layout_marginBottom="48dp"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="27dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="355dp"
+        android:layout_marginBottom="59dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/avion" />
 </androidx.constraintlayout.widget.ConstraintLayout>
