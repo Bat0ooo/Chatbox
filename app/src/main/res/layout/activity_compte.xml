@@ -22,7 +22,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/LoginCreate"
+        android:id="@+id/Create_login"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="80dp"
@@ -37,7 +37,7 @@
         app:layout_constraintTop_toBottomOf="@+id/CreationDeCompte" />
 
     <EditText
-        android:id="@+id/PasswordCreate"
+        android:id="@+id/Create_Password"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="24dp"
@@ -49,10 +49,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/LoginCreate" />
+        app:layout_constraintTop_toBottomOf="@+id/Create_login" />
 
     <EditText
-        android:id="@+id/PasswordCreate2"
+        android:id="@+id/Create_Password2"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="24dp"
@@ -64,15 +64,27 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/PasswordCreate" />
+        app:layout_constraintTop_toBottomOf="@+id/Create_Password" />
 
     <Button
-        android:id="@+id/Connect"
+        android:id="@+id/Create_button"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:text="CREER UN COMPTE"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/PasswordCreate2" />
+        app:layout_constraintTop_toBottomOf="@+id/Create_Password2" />
+
+    <TextView
+        android:id="@+id/errorText"
+        android:layout_width="wrap_content"
+        android:layout_height="28dp"
+        android:textColor="@color/red"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/Create_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Create_Password2" />
 </androidx.constraintlayout.widget.ConstraintLayout>
