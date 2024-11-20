@@ -3,6 +3,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,14 +26,22 @@ public class HomeActivity extends AppCompatActivity {
                 String message = newMessage.getText().toString().trim();
                     TextView messageView = new TextView(HomeActivity.this);
                     messageView.setText(message);
-
                     messageView.setBackgroundResource(R.drawable.message_background);
                     messageView.setPadding(30, 20, 20, 30);
 
-
+                ImageButton like = new ImageButton(HomeActivity.this);
+                like.setImageResource(R.drawable.coeur);
+                like.setBackground(null);
+                like.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        like.setImageResource(R.drawable.coeur);
+                    }
+                });
                 discussionContainer.addView(messageView);
+                discussionContainer.addView(like);
 
-                    newMessage.setText("");
+                newMessage.setText("");
                 }
         });
     }
