@@ -29,17 +29,28 @@ public class HomeActivity extends AppCompatActivity {
                     messageView.setBackgroundResource(R.drawable.message_background);
                     messageView.setPadding(30, 20, 20, 30);
 
-                ImageButton like = new ImageButton(HomeActivity.this);
-                like.setImageResource(R.drawable.coeur);
+                ImageButton like = new ImageButton(HomeActivity.this); //Création du bouton coeur
+                like.setImageResource(R.drawable.coeur_vide); //Mettre le bouton à l'image "coeur"
                 like.setBackground(null);
+
+
+                TextView likeCompteur = new TextView(HomeActivity.this);
+                likeCompteur.setText("0");
+                likeCompteur.setPadding(16, 0, 0, 0);
+
+                final int[] compteur = {0};
+
                 like.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        like.setImageResource(R.drawable.coeur);
+                        compteur[0]++;
+                        like.setImageResource(R.drawable.coeur_plein);
+                        likeCompteur.setText(String.valueOf(compteur[0]));
                     }
                 });
                 discussionContainer.addView(messageView);
                 discussionContainer.addView(like);
+                discussionContainer.addView(likeCompteur);
 
                 newMessage.setText("");
                 }
