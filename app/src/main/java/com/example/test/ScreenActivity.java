@@ -27,7 +27,7 @@ public class ScreenActivity extends AppCompatActivity {
             Intent intent = new Intent(ScreenActivity.this, AuthentificationActivity.class);
             startActivity(intent);
             finish();
-        }, 3000);
+        }, 2000);
     }
 
 

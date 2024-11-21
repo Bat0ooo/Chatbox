@@ -22,13 +22,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/Create_login"
+        android:id="@+id/Create_email"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="80dp"
         android:background="@color/white"
         android:ems="10"
-        android:hint="Login"
+        android:hint="Email"
         android:inputType="text"
         android:paddingLeft="10dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,7 +49,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Create_login" />
+        app:layout_constraintTop_toBottomOf="@+id/Create_email" />
 
     <EditText
         android:id="@+id/Create_Password2"
@@ -70,7 +70,7 @@
         android:id="@+id/Create_button"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="40dp"
         android:text="CREER UN COMPTE"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
@@ -79,7 +79,7 @@
     <TextView
         android:id="@+id/errorText"
         android:layout_width="wrap_content"
-        android:layout_height="28dp"
+        android:layout_height="40dp"
         android:textColor="@color/red"
         android:textSize="16sp"
         android:textStyle="bold"
