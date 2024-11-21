@@ -18,6 +18,7 @@ public class HomeActivity extends AppCompatActivity {
     private EditText newMessage; // Champ de texte pour écrire un message
     private LinearLayout discussionContainer; // Conteneur pour afficher les messages
     private FirebaseFirestore firestore; // Instance Firestore pour gérer la base de données
+    ok
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
