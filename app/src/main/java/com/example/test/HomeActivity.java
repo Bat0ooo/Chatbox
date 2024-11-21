@@ -37,7 +37,7 @@ public class HomeActivity extends AppCompatActivity {
                 TextView likeCompteur = new TextView(HomeActivity.this);
                 likeCompteur.setText("0");
                 likeCompteur.setPadding(16, 0, 0, 0);
-
+                g
                 final int[] compteur = {0};
 
                 like.setOnClickListener(new View.OnClickListener() {
