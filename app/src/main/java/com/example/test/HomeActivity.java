@@ -35,6 +35,7 @@ public class HomeActivity extends AppCompatActivity {
             String message = newMessage.getText().toString().trim();
             if (!TextUtils.isEmpty(message)) { // Vérifier si le message n'est pas vide
                 envoyerMessage(message); // Envoi du message à Firestore
+                //envoyerLike(compteur);
             }
         });
 
@@ -54,6 +55,16 @@ public class HomeActivity extends AppCompatActivity {
                 .add(messageData) // Ajouter les données à Firestore
                 .addOnSuccessListener(documentReference -> newMessage.setText("")); // Vider le champ après envoi
     }
+    //private void envoyerLike(int compteur) {
+        // Créer un objet contenant le compteur de like
+        //Map<Integer, Object> compteurData = new HashMap<>();
+        //compteurData.put(Integer.valueOf("compteur"), compteur); // Le compteur de like
+        //compteurData.put(Integer.valueOf("timestamp"), System.currentTimeMillis()); // Timestamp pour trier les messages
+
+        // Ajouter le message à la collection "messages" dans Firestore
+        //firestore.collection("compteurs")
+         //       .add(compteurData); // Ajouter les données à Firestore
+    //}
 
     // Méthode pour charger les messages depuis Firestore
     private void chargerMessages() {
