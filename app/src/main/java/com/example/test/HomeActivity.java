@@ -96,8 +96,6 @@ public class HomeActivity extends AppCompatActivity {
                         );
                     }
                 });
-
-
 }
 
     private double calculerScore(long timestamp, int likes) {
@@ -157,7 +155,7 @@ public class HomeActivity extends AppCompatActivity {
         likeCompteur.setPadding(0, 19, 0, 0); // Espacement entre le cœur et le compteur
 
         // Gérer les clics sur le bouton "like"
-        final int[] compteur = {count};
+        final int[] compteur = {0};
         like.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
