@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,42 +51,81 @@ public class HomeActivity extends AppCompatActivity {
         Map<String, Object> messageData = new HashMap<>();
         messageData.put("message", message); // Le texte du message
         messageData.put("timestamp", System.currentTimeMillis()); // Timestamp pour trier les messages
-
+        messageData.put("score", 0);
         // Ajouter le message à la collection "messages" dans Firestore
         firestore.collection("messages")
                 .add(messageData) // Ajouter les données à Firestore
                 .addOnSuccessListener(documentReference -> newMessage.setText("")); // Vider le champ après envoi
     }
-    //private void envoyerLike(int compteur) {
-        // Créer un objet contenant le compteur de like
-        //Map<Integer, Object> compteurData = new HashMap<>();
-        //compteurData.put(Integer.valueOf("compteur"), compteur); // Le compteur de like
-        //compteurData.put(Integer.valueOf("timestamp"), System.currentTimeMillis()); // Timestamp pour trier les messages
-
-        // Ajouter le message à la collection "messages" dans Firestore
-        //firestore.collection("compteurs")
-         //       .add(compteurData); // Ajouter les données à Firestore
-    //}
 
     // Méthode pour charger les messages depuis Firestore
     private void chargerMessages() {
         firestore.collection("messages")
-                .orderBy("timestamp") // Trier les messages par ordre chronologique
-                .addSnapshotListener((snapshots, e) -> { // Écouter les mises à jour en temps réel
-                    if (snapshots != null) {
-                        discussionContainer.removeAllViews(); // Effacer les anciens messages
+                .orderBy("timestamp")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    ArrayList<Map<String, Object>> listeMessages = new ArrayList<>();
 
-                        // Parcourir les documents reçus
-                        for (QueryDocumentSnapshot doc : snapshots) {
-                            String message = doc.getString("message"); // Récupérer le texte du message
-                            afficherMessageLocal(message); // Afficher le message dans l'interface
-                        }
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        String message = doc.getString("message");
+                        long timestamp = doc.getLong("timestamp");
+                        int count = doc.contains("count") ? doc.getLong("count").intValue() : 0;
+
+                        double score = calculerScore(timestamp, count);
+
+                        Map<String, Object> messageData = new HashMap<>();
+                        messageData.put("message", message);
+                        messageData.put("score", score);
+                        messageData.put("docId", doc.getId());
+                        listeMessages.add(messageData);
+
+                        afficherMessageLocal(message, doc.getId(), count);
                     }
+
+                    listeMessages.sort((m1, m2) -> Double.compare(
+                            (double) m2.get("score"),
+                            (double) m1.get("score")
+                    ));
+                    discussionContainer.removeAllViews();
+
+                    for (Map<String, Object> msg : listeMessages) {
+                        afficherMessageLocal(
+                                (String) msg.get("message"),
+                                (String) msg.get("docId"),
+                                ((Double) msg.get("score")).intValue()
+                        );
+                    }
+                });
+
+
+}
+
+    private double calculerScore(long timestamp, int likes) {
+        long maintenant = System.currentTimeMillis();
+        long deltaTemps = maintenant - timestamp; // Âge du message en millisecondes
+        double deltaJours = deltaTemps / (1000.0 * 60 * 60 * 24); // Convertir en jours
+
+        // Si le message a plus de 30 jours, on le classe en dernier
+        if (deltaJours > 30) return 0;
+
+        // Calcul du score d'actualité
+        return 30 - deltaJours - likes;
+    }
+    private void aimerMessage(String messageId, int currentLikes) {
+        // Mettre à jour le nombre de likes
+        firestore.collection("messages")
+                .document(messageId)
+                .update("likes", currentLikes + 1) // Ajouter un like
+                .addOnSuccessListener(aVoid -> {
+                    // Optionnel : Afficher une notification ou un changement d'interface
+                })
+                .addOnFailureListener(e -> {
+                    // Gérer les erreurs si nécessaire
                 });
     }
 
     // Méthode pour afficher un message dans l'interface utilisateur
-    private void afficherMessageLocal(String message) {
+    private void afficherMessageLocal(String message, String docId, int count) {
         // Créer un conteneur vertical pour chaque message
         LinearLayout messageContainer = new LinearLayout(this);
         messageContainer.setOrientation(LinearLayout.VERTICAL); // Orientation verticale pour tout le message
@@ -116,11 +157,12 @@ public class HomeActivity extends AppCompatActivity {
         likeCompteur.setPadding(0, 19, 0, 0); // Espacement entre le cœur et le compteur
 
         // Gérer les clics sur le bouton "like"
-        final int[] compteur = {0};
+        final int[] compteur = {count};
         like.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 compteur[0]++;
+                aimerMessage(docId, compteur[0]);
                 like.setImageResource(R.drawable.coeur_plein); // Change l'image à "coeur plein"
                 likeCompteur.setText(String.valueOf(compteur[0])); // Met à jour le compteur
             }
