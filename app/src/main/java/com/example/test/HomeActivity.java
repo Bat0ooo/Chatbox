@@ -1,185 +1,246 @@
 package com.example.test;
+
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private EditText newMessage; // Champ de texte pour écrire un message
-    private LinearLayout discussionContainer; // Conteneur pour afficher les messages
-    private FirebaseFirestore firestore; // Instance Firestore pour gérer la base de données
+    private EditText newMessage;
+    private LinearLayout discussionContainer;
+    private FirebaseFirestore firestore;
+    private String currentUserId;
+    private String currentUsername;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Lier les éléments de l'interface aux variables Java
         newMessage = findViewById(R.id.NewMessage);
         discussionContainer = findViewById(R.id.discussionContainer);
 
-        // Initialiser Firestore
         firestore = FirebaseFirestore.getInstance();
 
-        // Configurer le bouton d'envoi
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+            fetchUsername(); // Récupérer le username de l'utilisateur connecté
+        } else {
+            currentUserId = null;
+        }
+
         findViewById(R.id.Envoi).setOnClickListener(v -> {
             String message = newMessage.getText().toString().trim();
-            if (!TextUtils.isEmpty(message)) { // Vérifier si le message n'est pas vide
-                envoyerMessage(message); // Envoi du message à Firestore
-                //envoyerLike(compteur);
+            if (!TextUtils.isEmpty(message)) {
+                envoyerMessage(message);
             }
         });
 
-        // Charger les messages existants dès le démarrage
         chargerMessages();
     }
 
-    // Méthode pour envoyer un message à Firestore
-    private void envoyerMessage(String message) {
-        // Créer un objet contenant les données du message
-        Map<String, Object> messageData = new HashMap<>();
-        messageData.put("message", message); // Le texte du message
-        messageData.put("timestamp", System.currentTimeMillis()); // Timestamp pour trier les messages
-        messageData.put("score", 0);
-        // Ajouter le message à la collection "messages" dans Firestore
-        firestore.collection("messages")
-                .add(messageData) // Ajouter les données à Firestore
-                .addOnSuccessListener(documentReference -> newMessage.setText("")); // Vider le champ après envoi
+    private void fetchUsername() {
+        if (currentUserId != null) {
+            firestore.collection("Users")
+                    .document(currentUserId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            currentUsername = documentSnapshot.getString("username");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        currentUsername = "Inconnu";
+                    });
+        }
     }
 
-    // Méthode pour charger les messages depuis Firestore
+    private void envoyerMessage(String message) {
+        Map<String, Object> messageData = new HashMap<>();
+        messageData.put("message", message);
+        messageData.put("timestamp", System.currentTimeMillis());
+        messageData.put("likes", 0);
+        messageData.put("score", 0);
+        messageData.put("username", currentUsername != null ? currentUsername : "Inconnu");
+
+        firestore.collection("messages")
+                .add(messageData)
+                .addOnSuccessListener(documentReference -> {
+                    newMessage.setText("");
+                });
+    }
+
     private void chargerMessages() {
         firestore.collection("messages")
-                .orderBy("timestamp")
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    ArrayList<Map<String, Object>> listeMessages = new ArrayList<>();
+                .orderBy("score", Query.Direction.DESCENDING)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (snapshots != null) {
+                        discussionContainer.removeAllViews();
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String message = doc.getString("message");
-                        long timestamp = doc.getLong("timestamp");
-                        int count = doc.contains("count") ? doc.getLong("count").intValue() : 0;
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            String message = doc.getString("message");
+                            String messageId = doc.getId();
+                            long timestamp = doc.getLong("timestamp");
+                            long currentTime = System.currentTimeMillis();
+                            long ageInMillis = currentTime - timestamp;
+                            long ageInDays = ageInMillis / (1000 * 60 * 60 * 24);
 
-                        double score = calculerScore(timestamp, count);
-
-                        Map<String, Object> messageData = new HashMap<>();
-                        messageData.put("message", message);
-                        messageData.put("score", score);
-                        messageData.put("docId", doc.getId());
-                        listeMessages.add(messageData);
-
-                        afficherMessageLocal(message, doc.getId(), count);
-                    }
-
-                    listeMessages.sort((m1, m2) -> Double.compare(
-                            (double) m2.get("score"),
-                            (double) m1.get("score")
-                    ));
-                    discussionContainer.removeAllViews();
-
-                    for (Map<String, Object> msg : listeMessages) {
-                        afficherMessageLocal(
-                                (String) msg.get("message"),
-                                (String) msg.get("docId"),
-                                ((Double) msg.get("score")).intValue()
-                        );
+                            if (ageInDays > 30) {
+                                firestore.collection("messages")
+                                        .document(messageId)
+                                        .delete();
+                            } else {
+                                int likes = doc.getLong("likes") != null ? doc.getLong("likes").intValue() : 0;
+                                int score = doc.getLong("score") != null ? doc.getLong("score").intValue() : 0;
+                                String username = doc.getString("username");
+                                afficherMessageLocal(message, messageId, likes, score, username);
+                            }
+                        }
                     }
                 });
-}
-
-    private double calculerScore(long timestamp, int likes) {
-        long maintenant = System.currentTimeMillis();
-        long deltaTemps = maintenant - timestamp; // Âge du message en millisecondes
-        double deltaJours = deltaTemps / (1000.0 * 60 * 60 * 24); // Convertir en jours
-
-        // Si le message a plus de 30 jours, on le classe en dernier
-        if (deltaJours > 30) return 0;
-
-        // Calcul du score d'actualité
-        return 30 - deltaJours - likes;
     }
-    private void aimerMessage(String messageId, int currentLikes) {
-        // Mettre à jour le nombre de likes
-        firestore.collection("messages")
-                .document(messageId)
-                .update("likes", currentLikes + 1) // Ajouter un like
-                .addOnSuccessListener(aVoid -> {
-                    // Optionnel : Afficher une notification ou un changement d'interface
-                })
-                .addOnFailureListener(e -> {
-                    // Gérer les erreurs si nécessaire
-                });
-    }
+    private void afficherMessageLocal(String message, String messageId, int likes, int score, String username) {
+        CardView cardView = new CardView(this);
+        CardView.LayoutParams cardParams = new CardView.LayoutParams(
+                CardView.LayoutParams.MATCH_PARENT,
+                CardView.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(20, 20, 20, 20);
+        cardView.setLayoutParams(cardParams);
+        cardView.setRadius(15);
+        cardView.setCardBackgroundColor(getResources().getColor(android.R.color.white));
+        cardView.setContentPadding(20, 20, 20, 0);
+        cardView.setElevation(10);
 
-    // Méthode pour afficher un message dans l'interface utilisateur
-    private void afficherMessageLocal(String message, String docId, int count) {
-        // Créer un conteneur vertical pour chaque message
         LinearLayout messageContainer = new LinearLayout(this);
-        messageContainer.setOrientation(LinearLayout.VERTICAL); // Orientation verticale pour tout le message
-        messageContainer.setPadding(0, 5, 0, 0);
+        messageContainer.setOrientation(LinearLayout.VERTICAL);
+        messageContainer.setGravity(Gravity.START); // Align the message to the left
 
-        // Créer un conteneur horizontal pour le bouton "like" et le compteur
-        LinearLayout likeContainer = new LinearLayout(this);
-        likeContainer.setOrientation(LinearLayout.HORIZONTAL); // Orientation horizontale
-        likeContainer.setPadding(10, 0, 0, 10);
-        likeContainer.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+        // TextView pour afficher le username avec coins arrondis
+        TextView userNameView = new TextView(this);
+        userNameView.setText(username != null ? username : "Inconnu");
+        userNameView.setTextColor(getResources().getColor(android.R.color.white));
+        userNameView.setTextSize(16); // Taille du texte du username
+        userNameView.setPadding(10, 5, 10, 5);
+        userNameView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+
+        // Appliquer un fond arrondi au TextView du username
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.RECTANGLE);
+        drawable.setCornerRadius(20); // Coins arrondis
+        drawable.setColor(getResources().getColor(android.R.color.darker_gray)); // Couleur de fond du username
+        userNameView.setBackground(drawable);
+
+        // Définir la largeur de userNameView à "wrap_content" pour s'adapter au texte
+        userNameView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
 
-        // Créer un bouton "like"
-        ImageButton like = new ImageButton(this);
-        like.setImageResource(R.drawable.coeur_vide); // Image du cœur vide
-        like.setBackground(null); // Supprimer le fond du bouton
+        // TextView pour afficher le message
+        TextView messageView = new TextView(this);
+        messageView.setText(message);
+        messageView.setTextSize(16);
+        messageView.setTextColor(getResources().getColor(android.R.color.black));
+
+        // Conteneur pour le bouton like et le compteur
+        LinearLayout likeContainer = new LinearLayout(this);
+        likeContainer.setOrientation(LinearLayout.HORIZONTAL);
+        likeContainer.setGravity(Gravity.CENTER_VERTICAL | Gravity.END); // Aligner à droite et centrer verticalement
+
+        // Bouton Like
+        ImageButton likeButton = new ImageButton(this);
+        likeButton.setImageResource(R.drawable.coeur_vide);
+        likeButton.setBackground(null);
         LinearLayout.LayoutParams likeParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        like.setLayoutParams(likeParams);
+        likeButton.setLayoutParams(likeParams);
 
-        // Créer un compteur pour les likes
-        TextView likeCompteur = new TextView(this);
-        likeCompteur.setText("0");
-        likeCompteur.setTextSize(16); // Taille du texte du compteur
-        likeCompteur.setPadding(0, 19, 0, 0); // Espacement entre le cœur et le compteur
+        // Compteur de likes
+        TextView likeCounter = new TextView(this);
+        likeCounter.setText(String.valueOf(likes));
+        likeCounter.setTextSize(16);
 
-        // Gérer les clics sur le bouton "like"
-        final int[] compteur = {0};
-        like.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                compteur[0]++;
-                aimerMessage(docId, compteur[0]);
-                like.setImageResource(R.drawable.coeur_plein); // Change l'image à "coeur plein"
-                likeCompteur.setText(String.valueOf(compteur[0])); // Met à jour le compteur
-            }
+        firestore.collection("messages")
+                .document(messageId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.contains("userLikes")) {
+                        Map<String, Boolean> userLikes = (Map<String, Boolean>) documentSnapshot.get("userLikes");
+                        if (userLikes != null && userLikes.containsKey(currentUserId) && userLikes.get(currentUserId)) {
+                            likeButton.setImageResource(R.drawable.coeur_plein);
+                        }
+                    }
+                });
+
+        likeButton.setOnClickListener(v -> {
+            firestore.collection("messages")
+                    .document(messageId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        int currentLikes = documentSnapshot.getLong("likes").intValue();
+                        Map<String, Boolean> userLikes = (Map<String, Boolean>) documentSnapshot.get("userLikes");
+                        if (userLikes == null) userLikes = new HashMap<>();
+
+                        boolean isLiked = userLikes.containsKey(currentUserId) && userLikes.get(currentUserId);
+
+                        if (!isLiked) {
+                            userLikes.put(currentUserId, true);
+                            firestore.collection("messages")
+                                    .document(messageId)
+                                    .update("likes", currentLikes + 1,
+                                            "userLikes", userLikes,
+                                            "score", currentLikes + 1) // Incrémenter le score
+                                    .addOnSuccessListener(aVoid -> {
+                                        likeButton.setImageResource(R.drawable.coeur_plein);
+                                        likeCounter.setText(String.valueOf(currentLikes + 1));
+                                        chargerMessages(); // Rafraîchir la liste des messages après avoir mis à jour les likes et le score
+                                    });
+                        } else {
+                            userLikes.put(currentUserId, false);
+                            firestore.collection("messages")
+                                    .document(messageId)
+                                    .update("likes", currentLikes - 1,
+                                            "userLikes", userLikes,
+                                            "score", currentLikes - 1) // Décrémenter le score
+                                    .addOnSuccessListener(aVoid -> {
+                                        likeButton.setImageResource(R.drawable.coeur_vide);
+                                        likeCounter.setText(String.valueOf(currentLikes - 1));
+                                        chargerMessages(); // Rafraîchir la liste des messages après avoir mis à jour les likes et le score
+                                    });
+                        }
+                    });
         });
 
-        // Ajouter le bouton et le compteur au conteneur horizontal
-        likeContainer.addView(like);
-        likeContainer.addView(likeCompteur);
+        likeContainer.addView(likeButton);
+        likeContainer.addView(likeCounter);
 
-        // Créer un champ de texte pour le message
-        TextView messageView = new TextView(this);
-        messageView.setText(message);
-        messageView.setBackgroundResource(R.drawable.message_background);
-        messageView.setPadding(30, 20, 20, 30);
-
-        // Ajouter les conteneurs au conteneur principal
+        messageContainer.addView(userNameView);
         messageContainer.addView(messageView);
         messageContainer.addView(likeContainer);
 
-        // Ajouter le tout au conteneur des discussions
-        discussionContainer.addView(messageContainer);
+        cardView.addView(messageContainer);
+        discussionContainer.addView(cardView);
     }
+
 }

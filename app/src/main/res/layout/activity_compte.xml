@@ -12,7 +12,7 @@
         android:id="@+id/CreationDeCompte"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="104dp"
+        android:layout_marginTop="90dp"
         android:text="Création de compte"
         android:textColor="@color/bleu"
         android:textSize="34sp"
@@ -37,6 +37,21 @@
         app:layout_constraintTop_toBottomOf="@+id/CreationDeCompte" />
 
     <EditText
+        android:id="@+id/Create_Username"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="24dp"
+        android:background="@color/white"
+        android:ems="10"
+        android:hint="Nom d'utilisateur"
+        android:inputType="text"
+        android:paddingLeft="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Create_email" />
+
+    <EditText
         android:id="@+id/Create_Password"
         android:layout_width="0dp"
         android:layout_height="48dp"
@@ -49,7 +64,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Create_email" />
+        app:layout_constraintTop_toBottomOf="@+id/Create_Username" />
 
     <EditText
         android:id="@+id/Create_Password2"
@@ -70,7 +85,7 @@
         android:id="@+id/Create_button"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="44dp"
         android:text="CREER UN COMPTE"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
