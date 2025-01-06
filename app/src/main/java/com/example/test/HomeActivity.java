@@ -1,14 +1,18 @@
 package com.example.test;
 
+import android.content.Intent;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -23,224 +27,269 @@ import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private EditText newMessage;
-    private LinearLayout discussionContainer;
-    private FirebaseFirestore firestore;
-    private String currentUserId;
-    private String currentUsername;
+    private EditText newMessage;  // Champ de saisie pour le nouveau message
+    private LinearLayout discussionContainer;  // Conteneur qui affiche les messages
+    private FirebaseFirestore firestore;  // Instance Firestore pour interagir avec la base de données
+    private String currentUserId;  // Identifiant de l'utilisateur actuel
+    private String currentUsername;  // Nom d'utilisateur de l'utilisateur actuel
+    private ImageView userMenuButton;  // Bouton pour afficher le menu utilisateur
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_home);  // Définir le layout pour l'activité
 
-        newMessage = findViewById(R.id.NewMessage);
-        discussionContainer = findViewById(R.id.discussionContainer);
+        // Initialiser les éléments de l'interface utilisateur
+        newMessage = findViewById(R.id.NewMessage);  // Champ de texte pour le message
+        discussionContainer = findViewById(R.id.discussionContainer);  // Conteneur pour afficher les messages
+        userMenuButton = findViewById(R.id.Menu);  // Bouton pour afficher le menu utilisateur
 
-        firestore = FirebaseFirestore.getInstance();
+        firestore = FirebaseFirestore.getInstance();  // Initialiser l'instance Firestore
 
+        // Vérifier si l'utilisateur est authentifié via Firebase Auth
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            currentUserId = currentUser.getUid();
-            fetchUsername(); // Récupérer le username de l'utilisateur connecté
+        if (currentUser != null) {  // Si l'utilisateur est connecté
+            currentUserId = currentUser.getUid();  // Récupérer l'ID utilisateur
+            leUsername();  // Récupérer le nom d'utilisateur de l'utilisateur connecté
         } else {
-            currentUserId = null;
+            currentUserId = null;  // Si aucun utilisateur n'est connecté, l'ID est nul
         }
 
+        // Configurer l'événement du bouton pour envoyer un message
         findViewById(R.id.Envoi).setOnClickListener(v -> {
-            String message = newMessage.getText().toString().trim();
-            if (!TextUtils.isEmpty(message)) {
-                envoyerMessage(message);
+            String message = newMessage.getText().toString().trim();  // Récupérer le message tapé
+            if (!TextUtils.isEmpty(message)) {  // Vérifier si le message n'est pas vide
+                envoyerMessage(message);  // Envoyer le message à la base de données
             }
         });
 
-        chargerMessages();
+        chargerMessages();  // Charger les messages existants de Firestore
+
+        // Configuration du menu utilisateur pour afficher le nom d'utilisateur et la déconnexion
+        userMenuButton.setOnClickListener(view -> {
+            PopupMenu popupMenu = new PopupMenu(HomeActivity.this, view);  // Créer un menu popup
+            popupMenu.getMenu().add(0, 0, 0, currentUsername);  // Ajouter le nom d'utilisateur dans le menu
+            popupMenu.getMenu().add(0, 1, 1, "Se déconnecter");  // Ajouter l'option de déconnexion
+
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                if (menuItem.getItemId() == 1) {  // Si l'utilisateur choisit de se déconnecter
+                    FirebaseAuth.getInstance().signOut();  // Déconnecter l'utilisateur
+                    Intent intent = new Intent(HomeActivity.this, AuthentificationActivity.class);  // Créer un nouvel Intent pour l'écran de connexion
+                    startActivity(intent);  // Lancer l'écran de connexion
+                    finish();  // Fermer l'activité actuelle (HomeActivity)
+                }
+                return true;
+            });
+
+            popupMenu.show();  // Afficher le menu
+        });
     }
 
-    private void fetchUsername() {
-        if (currentUserId != null) {
-            firestore.collection("Users")
-                    .document(currentUserId)
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            currentUsername = documentSnapshot.getString("username");
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        currentUsername = "Inconnu";
-                    });
-        }
-    }
-
-    private void envoyerMessage(String message) {
-        Map<String, Object> messageData = new HashMap<>();
-        messageData.put("message", message);
-        messageData.put("timestamp", System.currentTimeMillis());
-        messageData.put("likes", 0);
-        messageData.put("score", 0);
-        messageData.put("username", currentUsername != null ? currentUsername : "Inconnu");
-
-        firestore.collection("messages")
-                .add(messageData)
-                .addOnSuccessListener(documentReference -> {
-                    newMessage.setText("");
+    // Méthode pour récupérer le nom d'utilisateur de l'utilisateur connecté
+    private void leUsername() {
+        firestore.collection("Users")  // Accéder à la collection "Users" dans Firestore
+                .document(currentUserId)  // Accéder au document de l'utilisateur actuel
+                .get()  // Récupérer les données du document
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {  // Si le document existe
+                        currentUsername = documentSnapshot.getString("username");  // Récupérer le nom d'utilisateur
+                    }
                 });
     }
 
+    // Méthode pour envoyer un message à Firestore
+    private void envoyerMessage(String message) {
+        Map<String, Object> messageData = new HashMap<>();  // Créer une map pour stocker les données du message
+        messageData.put("message", message);  // Ajouter le message
+        messageData.put("timestamp", System.currentTimeMillis());  // Ajouter un timestamp du message
+        messageData.put("likes", 0);  // Initialiser le nombre de likes à 0
+        messageData.put("score", 0);  // Initialiser le score à 0
+        messageData.put("username", currentUsername != null ? currentUsername : "Inconnu");  // Ajouter le nom d'utilisateur ou "Inconnu" si non défini
+
+        firestore.collection("messages")  // Accéder à la collection "messages" de Firestore
+                .add(messageData)  // Ajouter les données du message à la collection
+                .addOnSuccessListener(documentReference -> {
+                    newMessage.setText("");  // Réinitialiser le champ de saisie après l'envoi du message
+                });
+    }
+
+    // Méthode pour charger les messages depuis Firestore
     private void chargerMessages() {
-        firestore.collection("messages")
-                .orderBy("score", Query.Direction.DESCENDING)
-                .addSnapshotListener((snapshots, e) -> {
-                    if (snapshots != null) {
-                        discussionContainer.removeAllViews();
+        firestore.collection("messages")  // Accéder à la collection "messages"
+                .orderBy("score", Query.Direction.DESCENDING)  // Trier les messages par score de manière décroissante
+                .addSnapshotListener((snapshots, e) -> {  // Observer les changements en temps réel
+                    if (snapshots != null) {  // Si des documents sont récupérés
+                        discussionContainer.removeAllViews();  // Supprimer tous les messages existants
 
-                        for (QueryDocumentSnapshot doc : snapshots) {
-                            String message = doc.getString("message");
-                            String messageId = doc.getId();
-                            long timestamp = doc.getLong("timestamp");
-                            long currentTime = System.currentTimeMillis();
-                            long ageInMillis = currentTime - timestamp;
-                            long ageInDays = ageInMillis / (1000 * 60 * 60 * 24);
+                        for (QueryDocumentSnapshot doc : snapshots) {  // Pour chaque message dans la collection
+                            String message = doc.getString("message");  // Récupérer le message
+                            String messageId = doc.getId();  // Récupérer l'ID du message
+                            long timestamp = doc.getLong("timestamp");  // Récupérer le timestamp du message
+                            long currentTime = System.currentTimeMillis();  // Obtenir l'heure actuelle
+                            long ageInMillis = currentTime - timestamp;  // Calculer l'âge du message en millisecondes
+                            long ageInDays = ageInMillis / (1000 * 60 * 60 * 24);  // Convertir l'âge en jours
 
-                            if (ageInDays > 30) {
-                                firestore.collection("messages")
+                            if (ageInDays > 30) {  // Si le message a plus de 30 jours
+                                firestore.collection("messages")  // Supprimer le message de Firestore
                                         .document(messageId)
                                         .delete();
                             } else {
-                                int likes = doc.getLong("likes") != null ? doc.getLong("likes").intValue() : 0;
-                                int score = doc.getLong("score") != null ? doc.getLong("score").intValue() : 0;
-                                String username = doc.getString("username");
-                                afficherMessageLocal(message, messageId, likes, score, username);
+                                int likes = doc.getLong("likes") != null ? doc.getLong("likes").intValue() : 0;  // Récupérer le nombre de likes
+                                int score = doc.getLong("score") != null ? doc.getLong("score").intValue() : 0;  // Récupérer le score du message
+                                String username = doc.getString("username");  // Récupérer le nom d'utilisateur
+                                afficherMessageLocal(message, messageId, likes, score, username, timestamp);  // Afficher le message localement
                             }
                         }
                     }
                 });
     }
-    private void afficherMessageLocal(String message, String messageId, int likes, int score, String username) {
-        CardView cardView = new CardView(this);
+
+    // Méthode pour afficher un message dans l'interface
+    private void afficherMessageLocal(String message, String messageId, int likes, int score, String username, long timestamp) {
+        CardView cardView = new CardView(this);  // Créer une nouvelle CardView pour afficher le message
         CardView.LayoutParams cardParams = new CardView.LayoutParams(
                 CardView.LayoutParams.MATCH_PARENT,
                 CardView.LayoutParams.WRAP_CONTENT
         );
-        cardParams.setMargins(20, 20, 20, 20);
-        cardView.setLayoutParams(cardParams);
-        cardView.setRadius(15);
-        cardView.setCardBackgroundColor(getResources().getColor(android.R.color.white));
-        cardView.setContentPadding(20, 20, 20, 0);
-        cardView.setElevation(10);
+        cardParams.setMargins(20, 20, 20, 20);  // Ajouter des marges autour de la CardView
+        cardView.setLayoutParams(cardParams);  // Appliquer les paramètres de mise en page à la CardView
+        cardView.setRadius(15);  // Arrondir les coins de la CardView
+        cardView.setCardBackgroundColor(getResources().getColor(android.R.color.white));  // Définir la couleur de fond
+        cardView.setContentPadding(20, 20, 20, 0);  // Ajouter du padding à l'intérieur de la CardView
+        cardView.setElevation(10);  // Ajouter une élévation (ombre)
 
-        LinearLayout messageContainer = new LinearLayout(this);
-        messageContainer.setOrientation(LinearLayout.VERTICAL);
-        messageContainer.setGravity(Gravity.START); // Align the message to the left
+        LinearLayout messageContainer = new LinearLayout(this);  // Créer un conteneur pour le message
+        messageContainer.setOrientation(LinearLayout.VERTICAL);  // Organiser les éléments de manière verticale
+        messageContainer.setGravity(Gravity.START);  // Aligner le contenu à gauche
 
-        // TextView pour afficher le username avec coins arrondis
-        TextView userNameView = new TextView(this);
-        userNameView.setText(username != null ? username : "Inconnu");
-        userNameView.setTextColor(getResources().getColor(android.R.color.white));
-        userNameView.setTextSize(16); // Taille du texte du username
-        userNameView.setPadding(10, 5, 10, 5);
-        userNameView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        // Créer un conteneur pour l'icône de l'utilisateur et son nom
+        LinearLayout headerLayout = new LinearLayout(this);
+        headerLayout.setOrientation(LinearLayout.HORIZONTAL);  // Disposition horizontale
+        headerLayout.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);  // Aligner à gauche et centrer verticalement
 
-        // Appliquer un fond arrondi au TextView du username
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setShape(GradientDrawable.RECTANGLE);
-        drawable.setCornerRadius(20); // Coins arrondis
-        drawable.setColor(getResources().getColor(android.R.color.darker_gray)); // Couleur de fond du username
-        userNameView.setBackground(drawable);
-
-        // Définir la largeur de userNameView à "wrap_content" pour s'adapter au texte
-        userNameView.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-
-        // TextView pour afficher le message
-        TextView messageView = new TextView(this);
-        messageView.setText(message);
-        messageView.setTextSize(16);
-        messageView.setTextColor(getResources().getColor(android.R.color.black));
-
-        // Conteneur pour le bouton like et le compteur
-        LinearLayout likeContainer = new LinearLayout(this);
-        likeContainer.setOrientation(LinearLayout.HORIZONTAL);
-        likeContainer.setGravity(Gravity.CENTER_VERTICAL | Gravity.END); // Aligner à droite et centrer verticalement
-
-        // Bouton Like
-        ImageButton likeButton = new ImageButton(this);
-        likeButton.setImageResource(R.drawable.coeur_vide);
-        likeButton.setBackground(null);
-        LinearLayout.LayoutParams likeParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        likeButton.setLayoutParams(likeParams);
+        headerLayout.setLayoutParams(headerParams);  // Appliquer les paramètres au conteneur de l'en-tête
 
-        // Compteur de likes
+        // Création de l'arrière-plan avec coins arrondis
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.RECTANGLE);  // Définir la forme comme un rectangle
+        drawable.setCornerRadius(30);  // Arrondir les coins
+        drawable.setColor(getResources().getColor(android.R.color.darker_gray));  // Définir la couleur de fond
+        headerLayout.setBackground(drawable);  // Appliquer l'arrière-plan
+
+        // Créer et ajouter l'icône de l'utilisateur
+        ImageView userIcon = new ImageView(this);
+        userIcon.setImageResource(R.drawable.personne_rond);  // Définir l'icône de l'utilisateur
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(50, 50);  // Définir la taille de l'icône
+        iconParams.setMargins(10, 10, 5, 10);  // Ajouter des marges autour de l'icône
+        userIcon.setLayoutParams(iconParams);  // Appliquer les paramètres de mise en page à l'icône
+
+        // Créer et ajouter le nom d'utilisateur
+        TextView userNameView = new TextView(this);
+        userNameView.setText(username != null ? username : "Inconnu");  // Afficher le nom d'utilisateur ou "Inconnu"
+        userNameView.setTextColor(getResources().getColor(android.R.color.white));  // Définir la couleur du texte
+        userNameView.setTextSize(16);  // Définir la taille du texte
+        userNameView.setTypeface(null, Typeface.BOLD);  // Définir le texte en gras
+        userNameView.setPadding(5, 10, 10, 10);  // Ajouter un padding autour du texte
+
+        // Ajouter l'icône et le nom d'utilisateur dans le conteneur horizontal
+        headerLayout.addView(userIcon);  // Ajouter l'icône
+        headerLayout.addView(userNameView);  // Ajouter le nom d'utilisateur
+
+        // Créer et ajouter le message
+        TextView messageView = new TextView(this);
+        messageView.setText(message);  // Afficher le message
+        messageView.setTextSize(16);  // Définir la taille du texte
+        messageView.setTextColor(getResources().getColor(android.R.color.black));  // Définir la couleur du texte
+
+        // Créer un conteneur pour les boutons de likes
+        LinearLayout likeContainer = new LinearLayout(this);
+        likeContainer.setOrientation(LinearLayout.HORIZONTAL);  // Disposition horizontale
+        likeContainer.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);  // Aligner à droite et centrer verticalement
+
+        // Créer un bouton de like avec une image
+        ImageButton likeButton = new ImageButton(this);
+        likeButton.setImageResource(R.drawable.coeur_vide);  // Définir l'icône du bouton "like"
+        likeButton.setBackground(null);  // Enlever le fond par défaut du bouton
+        LinearLayout.LayoutParams likeParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT  // Définir la taille du bouton "like"
+        );
+        likeButton.setLayoutParams(likeParams);  // Appliquer les paramètres au bouton de like
+
+        // Créer un TextView pour afficher le nombre de likes
         TextView likeCounter = new TextView(this);
-        likeCounter.setText(String.valueOf(likes));
-        likeCounter.setTextSize(16);
+        likeCounter.setText(String.valueOf(likes));  // Afficher le nombre de likes
+        likeCounter.setTextSize(16);  // Définir la taille du texte du compteur de likes
 
+        // Vérification si l'utilisateur a déjà liké ce message
         firestore.collection("messages")
-                .document(messageId)
-                .get()
+                .document(messageId)  // Accéder au document du message
+                .get()  // Récupérer le document
                 .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.contains("userLikes")) {
+                    if (documentSnapshot.contains("userLikes")) {  // Vérifier si le champ "userLikes" existe
                         Map<String, Boolean> userLikes = (Map<String, Boolean>) documentSnapshot.get("userLikes");
                         if (userLikes != null && userLikes.containsKey(currentUserId) && userLikes.get(currentUserId)) {
-                            likeButton.setImageResource(R.drawable.coeur_plein);
+                            likeButton.setImageResource(R.drawable.coeur_plein);  // Si l'utilisateur a liké, changer l'icône
                         }
                     }
                 });
 
+        // Action lorsque l'utilisateur clique sur le bouton "like"
         likeButton.setOnClickListener(v -> {
             firestore.collection("messages")
-                    .document(messageId)
-                    .get()
+                    .document(messageId)  // Accéder au document du message
+                    .get()  // Récupérer le document
                     .addOnSuccessListener(documentSnapshot -> {
-                        int currentLikes = documentSnapshot.getLong("likes").intValue();
+                        int currentLikes = documentSnapshot.getLong("likes").intValue();  // Récupérer le nombre actuel de likes
                         Map<String, Boolean> userLikes = (Map<String, Boolean>) documentSnapshot.get("userLikes");
-                        if (userLikes == null) userLikes = new HashMap<>();
+                        if (userLikes == null) userLikes = new HashMap<>();  // Initialiser si "userLikes" est nul
 
+                        // Vérifier si l'utilisateur a déjà liké ce message
                         boolean isLiked = userLikes.containsKey(currentUserId) && userLikes.get(currentUserId);
 
-                        if (!isLiked) {
-                            userLikes.put(currentUserId, true);
+                        if (!isLiked) {  // Si l'utilisateur n'a pas encore liké
+                            userLikes.put(currentUserId, true);  // Ajouter un like pour l'utilisateur
                             firestore.collection("messages")
-                                    .document(messageId)
+                                    .document(messageId)  // Mettre à jour le message dans Firestore
                                     .update("likes", currentLikes + 1,
                                             "userLikes", userLikes,
-                                            "score", currentLikes + 1) // Incrémenter le score
+                                            "score", currentLikes + 1)  // Incrémenter les likes et le score
                                     .addOnSuccessListener(aVoid -> {
-                                        likeButton.setImageResource(R.drawable.coeur_plein);
-                                        likeCounter.setText(String.valueOf(currentLikes + 1));
-                                        chargerMessages(); // Rafraîchir la liste des messages après avoir mis à jour les likes et le score
+                                        likeButton.setImageResource(R.drawable.coeur_plein);  // Changer l'icône pour un cœur plein
+                                        likeCounter.setText(String.valueOf(currentLikes + 1));  // Mettre à jour le compteur de likes
+                                        chargerMessages();  // Recharger les messages
                                     });
-                        } else {
-                            userLikes.put(currentUserId, false);
+                        } else {  // Si l'utilisateur a déjà liké
+                            userLikes.put(currentUserId, false);  // Retirer le like pour l'utilisateur
                             firestore.collection("messages")
-                                    .document(messageId)
+                                    .document(messageId)  // Mettre à jour le message dans Firestore
                                     .update("likes", currentLikes - 1,
                                             "userLikes", userLikes,
-                                            "score", currentLikes - 1) // Décrémenter le score
+                                            "score", currentLikes - 1)  // Décrémenter les likes et le score
                                     .addOnSuccessListener(aVoid -> {
-                                        likeButton.setImageResource(R.drawable.coeur_vide);
-                                        likeCounter.setText(String.valueOf(currentLikes - 1));
-                                        chargerMessages(); // Rafraîchir la liste des messages après avoir mis à jour les likes et le score
+                                        likeButton.setImageResource(R.drawable.coeur_vide);  // Changer l'icône pour un cœur vide
+                                        likeCounter.setText(String.valueOf(currentLikes - 1));  // Mettre à jour le compteur de likes
+                                        chargerMessages();  // Recharger les messages
                                     });
                         }
                     });
         });
 
-        likeContainer.addView(likeButton);
-        likeContainer.addView(likeCounter);
+        // Ajouter le bouton "like" et le compteur de likes dans le conteneur
+        likeContainer.addView(likeButton);  // Ajouter le bouton "like"
+        likeContainer.addView(likeCounter);  // Ajouter le compteur de likes
 
-        messageContainer.addView(userNameView);
-        messageContainer.addView(messageView);
-        messageContainer.addView(likeContainer);
+        // Ajouter l'en-tête, le message et les likes dans le conteneur du message
+        messageContainer.addView(headerLayout);  // Ajouter l'en-tête avec l'icône et le nom
+        messageContainer.addView(messageView);  // Ajouter le texte du message
+        messageContainer.addView(likeContainer);  // Ajouter le conteneur des likes
 
-        cardView.addView(messageContainer);
-        discussionContainer.addView(cardView);
+        // Ajouter le conteneur du message dans la CardView
+        cardView.addView(messageContainer);  // Ajouter le conteneur du message à la CardView
+        discussionContainer.addView(cardView);  // Ajouter la CardView au conteneur principal des discussions
     }
-
 }

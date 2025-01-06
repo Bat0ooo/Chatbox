@@ -16,71 +16,112 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class AuthentificationActivity extends AppCompatActivity {
+// Déclare la classe AuthentificationActivity, qui hérite d'AppCompatActivity.
 
-    private FirebaseAuth auth; // FirebaseAuth pour gérer l'authentification
-    private TextView compte, errorText; // TextViews pour "Créer un compte" et pour afficher des erreurs
-    private Button connectButton; // Bouton pour se connecter
+    private FirebaseAuth auth;
+    private TextView compte, errorText;
+    private Button connectButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Méthode appelée à la création de l'activité.
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.authentification_home); // Définit le layout de cette activité
+        // Appelle la méthode de la superclasse pour initialiser l'activité.
 
-        // Ajuste les insets pour prendre en compte les barres de statut et de navigation (optionnel)
+        setContentView(R.layout.authentification_home);
+        // Définit le fichier de mise en page associé à cette activité.
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.authentification), (v, insets) -> {
+            // Gestion des marges pour les barres système (haut et bas).
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom); // Applique un padding pour éviter que l'interface soit cachée par les barres système
+            // Récupère les marges des barres système.
+
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            // Applique un padding pour éviter que le contenu soit masqué par les barres système.
+
             return insets;
+            // Retourne les marges pour maintenir leur état.
         });
 
-        // Initialiser FirebaseAuth
-        auth = FirebaseAuth.getInstance(); // Récupère l'instance de FirebaseAuth pour gérer les connexions
+        auth = FirebaseAuth.getInstance();
+        // Initialise FirebaseAuth pour les opérations d'authentification.
 
-        // Récupérer les vues associées
-        connectButton = findViewById(R.id.Connect); // Le bouton de connexion
-        compte = findViewById(R.id.creercompte); // Le texte "Créer un compte"
-        errorText = findViewById(R.id.errorText); // Affichage des erreurs
+        connectButton = findViewById(R.id.Connect);
+        // Associe le bouton de connexion à son ID dans le fichier XML.
 
-        // Gestion du clic sur le bouton "Se connecter"
+        compte = findViewById(R.id.creercompte);
+        // Associe le texte "Créer un compte" à son ID dans le fichier XML.
+
+        errorText = findViewById(R.id.errorText);
+        // Associe le champ de texte pour afficher les messages d'erreur.
+
         connectButton.setOnClickListener(v -> {
-            // Récupérer les champs de texte pour l'email et le mot de passe
+            // Déclare une action à effectuer lors du clic sur le bouton de connexion.
+
             TextView LoginField = findViewById(R.id.Email);
+            // Associe le champ d'email saisi par l'utilisateur.
+
             TextView PasswordField = findViewById(R.id.Password);
+            // Associe le champ de mot de passe saisi par l'utilisateur.
 
-            // Récupérer le texte des champs et le nettoyer des espaces superflus
             String email = LoginField.getText().toString().trim();
-            String password = PasswordField.getText().toString().trim();
+            // Récupère l'email saisi et supprime les espaces superflus.
 
-            // Vérifier si les champs sont vides
+            String password = PasswordField.getText().toString().trim();
+            // Récupère le mot de passe saisi et supprime les espaces superflus.
+
             if (email.isEmpty() || password.isEmpty()) {
-                // Si l'un des champs est vide, afficher un message d'erreur
+                // Vérifie si un des champs est vide.
                 errorText.setText("Veuillez remplir tous les champs !");
-                errorText.setVisibility(View.VISIBLE); // Affiche l'erreur
-                return; // Quitte la méthode si les champs ne sont pas remplis
+                // Définit un message d'erreur pour les champs vides.
+
+                errorText.setVisibility(View.VISIBLE);
+                // Rendre le message d'erreur visible.
+
+                return;
+                // Interrompt l'exécution si les champs ne sont pas remplis.
             }
 
-            // Tentative de connexion avec Firebase avec l'email et le mot de passe
             auth.signInWithEmailAndPassword(email, password)
+                    // Utilise Firebase pour tenter une connexion avec l'email et le mot de passe.
                     .addOnCompleteListener(task -> {
+                        // Ajoute un listener pour capturer le résultat de la tentative.
                         if (task.isSuccessful()) {
-                            // Connexion réussie, affichage d'un toast et redirection vers HomeActivity
+                            // Vérifie si la connexion a réussi.
                             FirebaseUser user = auth.getCurrentUser();
-                            Toast.makeText(AuthentificationActivity.this, "Connecté en tant que " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                            // Récupère l'utilisateur actuellement connecté.
+
+                            Toast.makeText(AuthentificationActivity.this,
+                                    "Connecté en tant que " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                            // Affiche un message de succès avec l'email de l'utilisateur.
+
                             Intent intent = new Intent(AuthentificationActivity.this, HomeActivity.class);
-                            startActivity(intent); // Ouvre HomeActivity
-                            finish(); // Ferme l'activité actuelle
+                            // Crée une intention pour rediriger l'utilisateur vers la page principale (HomeActivity).
+
+                            startActivity(intent);
+                            // Lance l'activité HomeActivity.
+
+                            finish();
+                            // Ferme l'activité actuelle pour éviter un retour en arrière.
                         } else {
-                            // Connexion échouée, affichage du message d'erreur
+                            // Si la connexion échoue.
                             errorText.setText("Erreur de connexion : " + task.getException().getMessage());
-                            errorText.setVisibility(View.VISIBLE); // Affiche l'erreur
+                            // Affiche l'erreur retournée par Firebase.
+
+                            errorText.setVisibility(View.VISIBLE);
+                            // Rendre visible le message d'erreur.
                         }
                     });
         });
 
-        // Gestion du clic sur "Créer un compte" pour rediriger vers la page d'inscription
         compte.setOnClickListener(v -> {
+            // Déclare une action à effectuer lorsque l'utilisateur clique sur "Créer un compte".
+
             Intent intent = new Intent(AuthentificationActivity.this, CompteActivity.class);
-            startActivity(intent); // Ouvre l'activité de création de compte
+            // Crée une intention pour rediriger l'utilisateur vers l'activité de création de compte.
+
+            startActivity(intent);
+            // Lance l'activité CompteActivity.
         });
     }
 }

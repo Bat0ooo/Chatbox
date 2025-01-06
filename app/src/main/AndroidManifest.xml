@@ -17,12 +17,15 @@
 
         <activity
             android:name=".CompteActivity"
+            android:theme="@style/Base.Theme.Test"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"
+            android:theme="@style/Base.Theme.Test"
             android:exported="false" />
         <activity
             android:name=".ScreenActivity"
+            android:theme="@style/Base.Theme.Test"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +35,8 @@
         </activity>
         <activity
             android:name=".AuthentificationActivity"
-            android:exported="false"></activity>
+            android:theme="@style/Base.Theme.Test"
+            android:exported="false"/>
     </application>
 
 </manifest>
