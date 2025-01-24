@@ -1,5 +1,4 @@
 package com.example.test;
-
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -12,21 +11,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
-
     private EditText newMessage;  // Champ de saisie pour le nouveau message
     private LinearLayout discussionContainer;  // Conteneur qui affiche les messages
     private FirebaseFirestore firestore;  // Instance Firestore pour interagir avec la base de données
@@ -175,10 +170,10 @@ public class HomeActivity extends AppCompatActivity {
 
         // Création de l'arrière-plan avec coins arrondis
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setShape(GradientDrawable.RECTANGLE);  // Définir la forme comme un rectangle
-        drawable.setCornerRadius(30);  // Arrondir les coins
-        drawable.setColor(getResources().getColor(android.R.color.darker_gray));  // Définir la couleur de fond
-        headerLayout.setBackground(drawable);  // Appliquer l'arrière-plan
+        //drawable.setShape(GradientDrawable.RECTANGLE);  // Définir la forme comme un rectangle
+        //drawable.setCornerRadius(30);  // Arrondir les coins
+        //drawable.setColor(getResources().getColor(android.R.color.darker_gray));  // Définir la couleur de fond
+        //headerLayout.setBackground(drawable);  // Appliquer l'arrière-plan
 
         // Créer et ajouter l'icône de l'utilisateur
         ImageView userIcon = new ImageView(this);
@@ -190,7 +185,7 @@ public class HomeActivity extends AppCompatActivity {
         // Créer et ajouter le nom d'utilisateur
         TextView userNameView = new TextView(this);
         userNameView.setText(username != null ? username : "Inconnu");  // Afficher le nom d'utilisateur ou "Inconnu"
-        userNameView.setTextColor(getResources().getColor(android.R.color.white));  // Définir la couleur du texte
+        userNameView.setTextColor(getResources().getColor(android.R.color.black));  // Définir la couleur du texte
         userNameView.setTextSize(16);  // Définir la taille du texte
         userNameView.setTypeface(null, Typeface.BOLD);  // Définir le texte en gras
         userNameView.setPadding(5, 10, 10, 10);  // Ajouter un padding autour du texte
